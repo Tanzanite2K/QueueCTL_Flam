@@ -141,6 +141,8 @@ queuectl worker list
 
 ## Architecture overview
 
+![](./assets/img1.png)
+
 High level components
 - CLI (`bin/queuectl.js`) — single entrypoint built with `commander` that performs DB initialization and exposes management commands (init, enqueue, worker start/stop, web start/stop, dlq, config, status).
 - Worker (`worker.js`) — simple Node process that registers a heartbeat in `workers` table and polls the `jobs` table for ready work.
