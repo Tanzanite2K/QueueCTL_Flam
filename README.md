@@ -1,7 +1,7 @@
 # QueueCTL - CLI Based Background Job Queue System
 
 
->A CLI-Bbased Background Job Queue System Designed To Manage Asynchronous Task Execution Reliably And With A Lightweight Web Dashboard.
+>A CLI-Based Background Job Queue System Designed To Manage Asynchronous Task Execution Reliably And With A Lightweight Web Dashboard.
 
 ## Features
 - Atomic job claiming using SQLite transactions
