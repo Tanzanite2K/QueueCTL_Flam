@@ -1,0 +1,45 @@
+{
+  "name": "queuectl",
+  "version": "1.0.0",
+  "description": "A CLI-based background job queue system",
+  "main": "./bin/queuectl.js",
+  "bin": {
+    "queuectl": "./bin/queuectl.js"
+  },
+  "scripts": {
+    "test": "mocha --recursive --timeout 10000"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/prabhas/flam-queuectl.git"
+  },
+  "keywords": [
+    "CLI",
+    "queue",
+    "jobs",
+    "workers",
+    "background-jobs",
+    "job-scheduling"
+  ],
+  "author": "Prabhas",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/prabhas/flam-queuectl/issues"
+  },
+  "homepage": "https://github.com/prabhas/flam-queuectl#readme",
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "commander": "^14.0.2",
+    "express": "^5.1.0",
+    "open": "^10.2.0",
+    "path": "^0.12.7",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7"
+  }
+  ,
+  "devDependencies": {
+    "chai": "^4.3.7",
+    "mocha": "^10.2.0",
+    "execa": "^7.1.1"
+  }
+}
