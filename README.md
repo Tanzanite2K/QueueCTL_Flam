@@ -1,9 +1,19 @@
-# QueueCTL - CLI-based background job queue system
+# QueueCTL - CLI Based Background Job Queue System
 
 
->A small, self-hosted job queue and worker system with a CLI and a lightweight web dashboard.
+>A CLI-Bbased Background Job Queue System Designed To Manage Asynchronous Task Execution Reliably And With A Lightweight Web Dashboard.
 
-[![CI](https://img.shields.io/github/actions/workflow/status/Tanzanite2K/flam-queuectl/ci.yml?branch=main)](./.github/workflows/ci.yml)
+## Features
+- Atomic job claiming using SQLite transactions
+- Configurable retry mechanism with exponential backoff
+- Dead Letter Queue (DLQ)
+- Worker heartbeat monitoring
+- Automatic stale worker recovery
+- Concurrent worker execution
+- Graceful shutdown support
+- Persistent job storage
+- Web dashboard for monitoring
+
 ![Node](https://img.shields.io/badge/node-18%20%7C%2020%20%7C%2022-339933)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 
@@ -158,18 +168,6 @@ High level components
 
 ---
 
-## Features
-- Atomic job claiming using SQLite transactions
-- Configurable retry mechanism with exponential backoff
-- Dead Letter Queue (DLQ)
-- Worker heartbeat monitoring
-- Automatic stale worker recovery
-- Concurrent worker execution
-- Graceful shutdown support
-- Persistent job storage
-- Web dashboard for monitoring
-
-
 ## QueueCTL Architecture
 
 See the full design write-up in [`DESIGN.md`](./DESIGN.md).
@@ -215,9 +213,87 @@ queuectl enqueue '{"id":"smoke-1","command":"node -e \"console.log(\\'smoke\\')\
 queuectl status
 ```
 
+## ✅ Test Results
+
+The project includes a comprehensive automated test suite using **Mocha** to validate the core functionality of QueueCTL.
+
+### Test Summary
+
+| Test Suite | Status | Description |
+|------------|--------|-------------|
+| CLI Bad Input Handling | ✅ Passed | Validates malformed JSON, missing required fields, and invalid configuration commands. |
+| QueueCTL CLI - Core Flows | ✅ Passed | Verifies database initialization, job enqueueing, job listing, and configuration persistence. |
+| Concurrency | ✅ Passed | Ensures multiple workers process jobs concurrently without duplicate execution. |
+| Basic Job Success | ✅ Passed | Confirms successful execution and completion of a simple job. |
+| Additional CLI Flows | ✅ Passed | Tests configuration management, queue status, DLQ retry, and worker listing. |
+| Persistence Across Restart | ✅ Passed | Verifies jobs remain persistent across worker restarts using SQLite. |
+| Worker Retry & Dead Letter Queue | ✅ Passed | Confirms failed jobs are retried and moved to the Dead Letter Queue after exceeding retry limits. |
+
+### Test Execution
+
+Run the complete test suite:
+
+```bash
+npm test
+```
+
+### Test Output
+
+```text
+> queuectl@1.0.0 test
+> mocha --recursive --timeout 10000
+
+  CLI bad input handling
+    ✔ returns an error for malformed JSON
+    ✔ returns an error for missing required fields
+    ✔ handles config set with missing args
+
+  queuectl CLI - core flows
+    ✔ initializes the database with init command
+    ✔ enqueues a job and lists pending jobs
+    ✔ preserves a user-configured default_max_tries value after reinitialization
+
+  concurrency: multiple workers
+    ✔ processes many jobs across multiple workers without double-processing
+
+  basic job success
+    ✔ processes a simple echo job to completion
+
+  queuectl CLI - additional flows
+    ✔ sets and gets configuration values
+    ✔ shows status with no jobs gracefully
+    ✔ handles DLQ retry
+    ✔ lists workers when none are active
+
+  persistence across restart
+    ✔ job persists and is processed after worker restart
+
+  worker retry and DLQ
+    ✔ retries failing job and moves it to DLQ after max attempts
+
+  14 passing (10s)
+```
+
+### Automated Test Coverage
+
+- ✅ CLI command validation
+- ✅ Database initialization
+- ✅ Job enqueueing
+- ✅ Job execution
+- ✅ Concurrent worker processing
+- ✅ Retry mechanism with exponential backoff
+- ✅ Dead Letter Queue (DLQ)
+- ✅ SQLite persistence across restarts
+- ✅ Configuration management
+- ✅ Error handling for invalid inputs
+
+**Result:** **All 14 automated tests passed successfully.**
+
+
 More docs
 - Full testing instructions and troubleshooting are in `TESTING.md`.
 - Detailed design notes and diagrams are in `DESIGN.md`.
+- 
 ---
 
 
@@ -232,5 +308,4 @@ GitHub: https://github.com/Tanzanite2K
 
 ## License
 This project is licensed under GPL-3.0. For more details check the [License](./LICENSE) file.
-#   Q u e u e C T L _ F l a m  
- 
+#
