@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en" class="bg-black">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QueueCTL Command Center</title>
+    <link rel="icon" href="../assets/favicon.ico" type="image/x-icon">
+
+    <meta name="theme-color" content="#000000">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .stat-card { transition: all 0.2s; }
+        /* .stat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); } */
+    </style>
+</head>
+<body class="bg-black text-gray-200">
+    <nav class="bg-black text-white py-4 px-6 shadow-lg border-b border-white/15">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-8 h-8 text-white">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.5h16.5a.75.75 0 01.75.75v10.5a.75.75 0 01-.75.75H3.75a.75.75 0 01-.75-.75V5.25a.75.75 0 01.75-.75z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 20.25h6M12 16.5v3.75" />
+                </svg>
+                <h1 class="text-xl font-bold tracking-tight">QueueCTL</h1>
+            </div>
+
+            <div class="flex items-center space-x-6">
+                <span class="relative flex h-2.5 w-2.5">
+                    <span id="connection-ping" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                    <span id="connection-dot" class="relative inline-flex rounded-full h-2.5 w-2.5 bg-white"></span>
+                </span>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto p-6">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+            <!-- RIGHT: chart + active infrastructure -->
+            <div class="lg:col-span-3 space-y-6 order-3">
+                <div class="bg-neutral-950 p-6 rounded-xl shadow-sm border border-white/15">
+                    <h4 class="text-sm font-bold text-gray-300 uppercase tracking-wider mb-4 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 mr-2 text-gray-500">
+                            <path d="M15.5 2A1.5 1.5 0 0014 3.5v13a1.5 1.5 0 001.5 1.5h1a1.5 1.5 0 001.5-1.5v-13A1.5 1.5 0 0016.5 2h-1zM9.5 6A1.5 1.5 0 008 7.5v9A1.5 1.5 0 009.5 18h1a1.5 1.5 0 001.5-1.5v-9A1.5 1.5 0 0010.5 6h-1zM3.5 10A1.5 1.5 0 002 11.5v5A1.5 1.5 0 003.5 18h1A1.5 1.5 0 006 16.5v-5A1.5 1.5 0 004.5 10h-1z" />
+                          </svg>
+                        Job State Distribution
+                    </h4>
+                    <div class="relative" style="height: 250px;">
+                        <canvas id="jobChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-neutral-950 rounded-xl shadow-sm border border-white/15 overflow-hidden">
+                    <div class="bg-neutral-900 px-6 py-4 border-b border-white/15 flex justify-between items-center">
+                        <h4 class="text-sm font-bold text-gray-300 uppercase tracking-wider flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 mr-2 text-gray-500">
+                                <path fill-rule="evenodd" d="M2 4.25A2.25 2.25 0 014.25 2h11.5A2.25 2.25 0 0118 4.25v8.5A2.25 2.25 0 0115.75 15h-3.105a3.501 3.501 0 001.1 1.677A.75.75 0 0113.26 18H6.74a.75.75 0 01-.484-1.323A3.501 3.501 0 007.355 15H4.25A2.25 2.25 0 012 12.75v-8.5zm1.5 0a.75.75 0 01.75-.75h11.5a.75.75 0 01.75.75v7.5a.75.75 0 01-.75.75H4.25a.75.75 0 01-.75-.75v-7.5z" clip-rule="evenodd" />
+                              </svg>
+                            Active Infrastructure
+                        </h4>
+                        <span class="px-2 py-1 text-xs font-medium bg-white text-black rounded-full ring-1 ring-inset ring-white/20" id="worker-count-badge">0 nodes</span>
+                    </div>
+                    <div class="divide-y divide-white/10 max-h-[400px] overflow-y-auto" id="worker-list">
+      
+                         <div class="p-6 text-center text-gray-500 text-sm italic">No workers detected</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MIDDLE: live job feed -->
+            <div class="lg:col-span-6 order-2">
+                <div class="bg-neutral-950 rounded-xl shadow-sm border border-white/15 overflow-hidden">
+                    <div class="bg-neutral-900 px-6 py-4 border-b border-white/15">
+                         <h4 class="text-sm font-bold text-gray-300 uppercase tracking-wider flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 mr-2 text-gray-500">
+                                <path fill-rule="evenodd" d="M10 2c-1.716 0-3.408.106-5.07.31C3.806 2.45 3 3.414 3 4.517V17.25a.75.75 0 001.075.676L10 15.082l5.925 2.844A.75.75 0 0017 17.25V4.517c0-1.103-.806-2.068-1.93-2.207A41.403 41.403 0 0010 2z" clip-rule="evenodd" />
+                              </svg>
+                            Live Job Feed
+                        </h4>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full">
+                            <thead class="bg-neutral-950 border-b border-white/15">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Job ID</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Tries</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Command</th>
+                                    <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Updated</th>
+                                </tr>
+                            </thead>
+                            <tbody id="job-list" class="divide-y divide-white/10">
+                                <tr><td class="px-6 py-4 text-sm text-gray-500 italic" colspan="5">Waiting for data stream...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LEFT: stat cards -->
+            <div class="lg:col-span-3 space-y-6 order-1">
+                <div class="stat-card bg-neutral-950 rounded-xl shadow-sm border border-white/15 p-6 flex items-center">
+                    <div class="p-3 rounded-lg bg-white/5 border border-white/15 text-white mr-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
+                          </svg>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-400 uppercase tracking-wider">Active Workers</p>
+                        <h3 id="stat-workers" class="text-3xl font-bold text-white">-</h3>
+                    </div>
+                </div>
+
+                <div class="stat-card bg-neutral-950 rounded-xl shadow-sm border border-white/15 p-6 flex items-center">
+                    <div class="p-3 rounded-lg bg-white/5 border border-white/15 text-white mr-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-400 uppercase tracking-wider">Success Rate</p>
+                        <h3 id="stat-success-rate" class="text-3xl font-bold text-white">- %</h3>
+                    </div>
+                </div>
+
+                <div class="stat-card bg-neutral-950 rounded-xl shadow-sm border border-white/15 p-6 flex items-center">
+                    <div class="p-3 rounded-lg bg-white/5 border border-white/15 text-white mr-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-400 uppercase tracking-wider">Pending Jobs</p>
+                        <h3 id="stat-pending" class="text-3xl font-bold text-white">-</h3>
+                    </div>
+                </div>
+
+                <div class="stat-card bg-neutral-950 rounded-xl shadow-sm border border-red-500/40 p-6 flex items-center">
+                    <div class="p-3 rounded-lg bg-red-500/15 border border-red-500/40 text-red-400 mr-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                          </svg>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-red-400 uppercase tracking-wider">Critical (DLQ)</p>
+                        <h3 id="stat-dead" class="text-3xl font-bold text-red-400">-</h3>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <div class="fixed bottom-4 right-4 bg-neutral-900 border border-white/15 rounded-full py-1.5 px-3">
+        <span id="last-updated" class="text-xs font-mono text-gray-400">Connecting...</span>
+    </div>
+
+    <script>
+        //config and states
+        let refreshTimer = null;
+        let jobChart = null;
+
+        //chart setup
+        function initChart() {
+            const ctx = document.getElementById('jobChart').getContext('2d');
+            jobChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Pending', 'Processing', 'Completed', 'Failed (Retry)', 'Dead (DLQ)'],
+                    datasets: [{
+                        data: [0, 0, 0, 0, 0],
+                        backgroundColor: ['#eab308', '#3b82f6', '#22c55e', '#000000', '#ef4444'],
+                        borderColor: '#ffffff',
+                        borderWidth: 2,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right', labels: { usePointStyle: true, color: '#d4d4d4', font: { family: 'Inter', size: 12 } } }
+                    },
+                    cutout: '75%'
+                }
+            });
+        }
+
+        //ui helpers
+        function getStatusBadge(state) {
+            const styles = {
+                'completed': 'bg-green-500/15 text-green-400 ring-green-500/40',
+                'processing': 'bg-blue-500/15 text-blue-400 ring-blue-500/40 animate-pulse',
+                'pending': 'bg-yellow-500/15 text-yellow-400 ring-yellow-500/40',
+                'failed': 'bg-black text-white ring-white/60',
+                'dead': 'bg-red-500/15 text-red-400 ring-red-500/40'
+            };
+            //icons for each state
+            const icons = {
+                'completed': '<svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>',
+                'processing': '<svg class="w-3 h-3 mr-1 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>',
+                'pending': '<svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/></svg>',
+                'failed': '<svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>',
+                'dead': '<svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clip-rule="evenodd"/></svg>'
+            }
+
+            const style = styles[state] || 'bg-neutral-900 text-gray-400 ring-white/20';
+            const icon = icons[state] || '';
+            return `<span class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${style}">${icon} ${state.charAt(0).toUpperCase() + state.slice(1)}</span>`;
+        }
+
+        function formatTime(isoString) {
+            const date = new Date(isoString + 'Z'); 
+            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+
+        //DATA FETCHING
+        async function updateDashboard() {
+            // Connection status indicators
+            const dot = document.getElementById('connection-dot');
+            const ping = document.getElementById('connection-ping');
+            const timeLabel = document.getElementById('last-updated');
+
+            try {
+                const res = await fetch('/api/summary');
+                if (!res.ok) throw new Error("API Error");
+                const data = await res.json();
+
+                //Update Connection Status (Green)
+                dot.className = "relative inline-flex rounded-full h-2.5 w-2.5 bg-white";
+                ping.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75";
+                timeLabel.innerText = new Date().toLocaleTimeString();
+
+                //Update KPI Cards
+                const s = data.stats.jobs;
+                document.getElementById('stat-workers').innerText = data.stats.workers;
+                document.getElementById('stat-pending').innerText = s.pending;
+                document.getElementById('stat-dead').innerText = s.dead;
+
+                //Calculate Success Rate
+                const totalFinished = s.completed + s.dead;
+                const rate = totalFinished > 0 ? Math.round((s.completed / totalFinished) * 100) : 0;
+                document.getElementById('stat-success-rate').innerText = `${rate}%`;
+
+                //Update Chart
+                jobChart.data.datasets[0].data = [s.pending, s.processing, s.completed, s.failed, s.dead];
+                jobChart.update();
+
+                //Update Worker List
+                const workerListEl = document.getElementById('worker-list');
+                document.getElementById('worker-count-badge').innerText = `${data.activeWorkers.length} active`;
+                
+                if (data.activeWorkers.length === 0) {
+                    workerListEl.innerHTML = '<div class="p-6 text-center text-gray-500 text-sm italic flex flex-col items-center"><svg class="w-8 h-8 mb-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>No active workers detected</div>';
+                } else {
+                    workerListEl.innerHTML = data.activeWorkers.map(w => `
+                        <div class="px-6 py-3 flex items-center justify-between hover:bg-white/5 transition-colors">
+                            <div class="flex items-center">
+                                <div class="h-8 w-8 rounded-full bg-white/10 flex items-center justify-center text-white mr-3">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
+                                        <path fill-rule="evenodd" d="M10 2c-1.716 0-3.408.106-5.07.31C3.806 2.45 3 3.414 3 4.517V17.25a.75.75 0 001.075.676L10 15.082l5.925 2.844A.75.75 0 0017 17.25V4.517c0-1.103-.806-2.068-1.93-2.207A41.403 41.403 0 0010 2z" clip-rule="evenodd" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-200">PID: ${w.pid}</p>
+                                    <p class="text-xs text-gray-500">${w.hostname}</p>
+                                </div>
+                            </div>
+                            <span class="flex h-2 w-2 relative">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                            </span>
+                        </div>
+                    `).join('');
+                }
+
+                //Update Job List Table
+                const jobListEl = document.getElementById('job-list');
+                if (data.recentJobs.length === 0) {
+                     jobListEl.innerHTML = '<tr><td class="px-6 py-8 text-center text-gray-500 italic" colspan="5">No recent jobs found in feed.</td></tr>';
+                } else {
+                    jobListEl.innerHTML = data.recentJobs.map(j => `
+                        <tr class="hover:bg-white/5 transition-colors">
+                            <td class="px-6 py-4 whitespace-nowrap">${getStatusBadge(j.state)}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-400">${j.id}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
+                                <span class="${j.attempts > 0 ? 'font-medium text-gray-200' : ''}">${j.attempts}</span>
+                                <span class="text-gray-500">/${j.max_attempts}</span>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-400 max-w-xs truncate" title="${j.command.replace(/"/g, '&quot;')}">
+                                <code class="bg-neutral-900 px-1.5 py-0.5 rounded text-gray-300">${j.command}</code>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-500">${formatTime(j.updated_at)}</td>
+                        </tr>
+                    `).join('');
+                }
+
+            } catch (e) {
+                console.error("Dashboard poll failed:", e);
+                dot.className = "relative inline-flex rounded-full h-2.5 w-2.5 bg-gray-500";
+                ping.className = "hidden";
+                timeLabel.innerText = "Connection lost!";
+            }
+        }
+
+        //INIT
+        initChart();
+        updateDashboard();
+        refreshTimer = setInterval(updateDashboard, 2000);
+    </script>
+</body>
+</html>
