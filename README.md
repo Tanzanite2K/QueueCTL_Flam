@@ -20,7 +20,7 @@
 
 ## 🎥 Video Demonstration
 
-Watch the complete project demo here: https://drive.google.com/...
+Watch the complete project demo here: [https://drive.google.com/...](https://drive.google.com/file/d/1QMqXaU5ywJbayLsX63aggXOU0CSf1u6F/view?usp=drivesdk)
 
 
 ## Table of Contents
