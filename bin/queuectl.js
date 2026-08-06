@@ -13,7 +13,6 @@ const program = new Command();
 
 /**
  * @notice banner for queueCTL CLI
- * @dev I made this myself through trial and error
  */
 
 function printBanner() {
